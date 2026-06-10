@@ -1,0 +1,38 @@
+# Publishes to PyPI via Trusted Publishing (OIDC). No API token anywhere —
+# PyPI trusts this repo+workflow identity directly.
+#
+# First-time setup (one-time, in the TempGuru PyPI account):
+#   PyPI → Account → Publishing → "Add a new pending publisher"
+#     project: llama-index-tools-tempguru · owner: Tempguru-co
+#     repo: llama-index-tools-tempguru · workflow: publish-pypi.yml
+#     environment: (leave blank)
+#
+# Release flow: bump version in pyproject.toml, then push a tag like v0.1.0
+# (or run this workflow manually).
+
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # OIDC token for PyPI Trusted Publishing
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Build sdist + wheel
+        run: uv build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
